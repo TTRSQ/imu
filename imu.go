@@ -4,6 +4,11 @@ import (
 	"sync"
 )
 
+type MeetUpper interface {
+	// apply .. returns meets
+	Apply(id string) bool
+}
+
 type meetUpper struct {
 	poolIdx  int
 	poolSize int
