@@ -15,7 +15,7 @@ type meetUpper struct {
 	pools    [3]pool
 }
 
-func NewMeetUpper(poolSize int) meetUpper {
+func NewMeetUpper(poolSize int) MeetUpper {
 	meetUpper := meetUpper{
 		pools: [3]pool{
 			{maxCount: poolSize},
@@ -24,7 +24,7 @@ func NewMeetUpper(poolSize int) meetUpper {
 		},
 		poolSize: poolSize,
 	}
-	return meetUpper
+	return &meetUpper
 }
 
 type pool struct {
