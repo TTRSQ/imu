@@ -4,9 +4,14 @@ import (
 	"sync"
 )
 
+type Item struct {
+	ID   string
+	Data interface{}
+}
+
 type MeetUpper interface {
-	// apply .. returns meets
-	Apply(id string) bool
+	// apply .. returns sameID Item
+	Apply(item Item) (interface{}, bool)
 }
 
 type meetUpper struct {
@@ -33,25 +38,31 @@ type pool struct {
 	maps     sync.Map
 }
 
-// apply .. returns meets
-func (imu *meetUpper) Apply(id string) bool {
-	exist, isFull := imu.pools[imu.poolIdx].add(id)
-	_, beforeExist := imu.pools[(imu.poolIdx+2)%3].maps.Load(id)
+// apply .. returns sameID Item
+func (imu *meetUpper) Apply(item Item) (interface{}, bool) {
+	data, exist, isFull := imu.pools[imu.poolIdx].add(item)
+	beforeData, beforeExist := imu.pools[(imu.poolIdx+2)%3].maps.Load(item.ID)
 	if isFull {
 		imu.poolIdx = (imu.poolIdx + 1) % 3
 		// poolIdx = 0 ~ 2
 		// 初めて 1になった時に2を初期化する
 		imu.pools[(imu.poolIdx+1)%3] = pool{maxCount: imu.poolSize}
 	}
-	return exist || beforeExist
+	if exist {
+		return data, true
+	}
+	if beforeExist {
+		return beforeData, true
+	}
+	return nil, false
 }
 
 // add .. return is ( exist, isFull ).
-func (p *pool) add(id string) (bool, bool) {
-	_, exist := p.maps.Load(id)
+func (p *pool) add(item Item) (interface{}, bool, bool) {
+	data, exist := p.maps.Load(item.ID)
 	if !exist {
-		p.maps.Store(id, true)
+		p.maps.Store(item.ID, item.Data)
 		p.count++
 	}
-	return exist, p.count == p.maxCount
+	return data, exist, p.count >= p.maxCount
 }
